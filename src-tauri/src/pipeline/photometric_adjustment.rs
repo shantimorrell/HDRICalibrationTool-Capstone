@@ -2,6 +2,7 @@ use crate::pipeline::DEBUG;
 use std::process::Command;
 use std::process::Stdio;
 use std::fs::File;
+use std::io::Write;
 
 use super::ConfigSettings;
 
@@ -18,8 +19,7 @@ use super::ConfigSettings;
 
 pub fn photometric_adjustment(
     config_settings: &ConfigSettings,
-    input_file: String,
-    output_file: String,
+    input_data: std::process::Output,
     photometric_adjustment: String,
 ) -> Result<std::process::Output, String> {
     if DEBUG {
@@ -34,11 +34,21 @@ pub fn photometric_adjustment(
         "-h",
         "-f",
         photometric_adjustment.as_str(),
-        input_file.as_str(),
     ]);
 
-    // Run the command, and get the output.
-    let output = command.output().expect("Photometric adjustment failed");
+    // Set the stdin as the input data
+    command.stdin(Stdio::piped());
+
+    // Run the command, waiting for stdin.
+    let running = command.spawn().expect("Photometric adjustment failed");
+
+    // Give stdin data.
+    let mut stdin = running.stdin.take().expect("Couldn't get stdin");
+    std::thread::spawn(move || {
+        stdin.write_all(&*input_data.stdout).expect("Issue getting previous stdout");
+    });
+
+    let output = running.wait_with_output().expect("Process didn't run properly");
 
     if DEBUG {
         println!(

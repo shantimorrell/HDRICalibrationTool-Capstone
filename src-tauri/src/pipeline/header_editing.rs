@@ -21,8 +21,8 @@ use super::ConfigSettings;
 
 pub fn header_editing(
     config_settings: &ConfigSettings,
-    input_file: String,
-    output_file: String,
+    input_data: std::process::Output,
+    output_data: std::process::Output,
     vertical_angle: String,
     horizontal_angle: String,
 ) -> Result<String, String> {
@@ -61,13 +61,12 @@ pub fn header_editing(
         format!("VIEW= -vta -vv {} -vh {}", vertical_angle, horizontal_angle).as_str(),
     ]);
 
-    // Set up piping of the input and output file
-    let file = File::create(&output_file).unwrap();
-    let fileinput = File::open(&input_file).unwrap();
-    let stdio_out = Stdio::from(file);
-    let stdio_in = Stdio::from(fileinput);
-    command.stdout(stdio_out);
-    command.stdin(stdio_in);
+    // Set up piping of the input file
+    command.stdout(output_data);
+    command.stdin(input_data);
+
+    // Run the command, and get the output.
+    let output = command.output().expect("Header Editing failed");
 
     // Run the command
     let status = command.status();

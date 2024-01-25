@@ -27,7 +27,7 @@ pub fn crop(
     diameter: String,
     xleft: String,
     ydown: String,
-) -> Result<String, String> {
+) -> Result<std::process::Output, String> {
     if DEBUG {
         println!("crop() was called with parameters:");
         println!("\tdiameter: {diameter}");
@@ -49,24 +49,14 @@ pub fn crop(
         format!("-{ydown}").as_str(),
     ]);
 
-    // Direct command's output to specifed output file
-    let file = File::create(&output_file).unwrap();
-    let stdio = Stdio::from(file);
-    command.stdout(stdio);
-
-    // Run the command
-    let status = command.status();
+    // Run the command, and get the output
+    let output = command.output().expect("Crop failed!");
 
     if DEBUG {
-        println!("\nCrop command exit status: {:?}\n", status);
+        println!("\nCrop command exit status: {:?}\n", output.status);
     }
 
-    // Return a Result object to indicate whether command was successful
-    if status.is_ok() {
-        // On success, return output path of HDR image
-        Ok(output_file.into())
-    } else {
-        // On error, return an error message
-        Err("Error, non-zero exit status. Crop command (pcompos) failed.".into())
-    }
+    assert!(output.status.success());
+
+    return Ok(output);
 }
