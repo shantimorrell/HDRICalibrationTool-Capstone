@@ -21,7 +21,7 @@ pub fn photometric_adjustment(
     input_file: String,
     output_file: String,
     photometric_adjustment: String,
-) -> Result<String, String> {
+) -> Result<std::process::Output, String> {
     if DEBUG {
         println!("photometric_adjustment() was called with parameters:\n\t photometric_adjustment: {photometric_adjustment}");
     }
@@ -37,32 +37,17 @@ pub fn photometric_adjustment(
         input_file.as_str(),
     ]);
 
-    // Set up piping of output to file
-    let file = File::create(&output_file).unwrap();
-    let stdio = Stdio::from(file);
-    command.stdout(stdio);
-
-    // Run the command
-    let status = command.status();
+    // Run the command, and get the output.
+    let output = command.output().expect("Photometric adjustment failed");
 
     if DEBUG {
         println!(
             "\nPhotometric adjustment command exit status: {:?}\n",
-            status
+            output.status
         );
     }
+    
+    assert!(output.status.success());
 
-    println!("{}", format!("{:?}", command).replace("\"", ""));
-
-    // Return a Result object to indicate whether command was successful
-    if status.is_ok() {
-        // On success, return output path of HDR image
-        Ok(output_file.into())
-    } else {
-        // On error, return an error message
-        Err(
-            "Error, non-zero exit status. Photometric adjustment command (pcomb) failed."
-                .into(),
-        )
-    }
+    return Ok(output);
 }
