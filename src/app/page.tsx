@@ -245,15 +245,44 @@ export default function Home() {
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <h1>HDRICalibrationTool</h1>
+    <main className="bg-white flex min-h-screen flex-col items-center justify-between">
       <div>
-        <h2>Image Upload</h2>
+        <nav className="pt-10 bg-gray-300 fixed left-0 w-1/4 h-full">
+          <ul>
+            <li className="font-bold pt-5 pl-5">Navigation Configuration</li>
+            <li className="pt-5 pl-5">
+              <a href="#image_selection">Image Selection</a>
+            </li>
+            <li className="pt-5 pl-5">
+              <a href="#response">Response File</a>
+            </li>
+            <li className="pt-5 pl-5">
+              <a href="#c_r_v">Cropping, Resizing, and View Settings</a>
+            </li>
+            <li className="pt-5 pl-5">
+              <a href="#v">Vignetting Correction</a>
+            </li>
+            <li className="pt-5 pl-5">
+              <a href="#nd">Neutral Density Correction</a>
+            </li>
+            <li className="pt-5 pl-5">
+              <a href="#cf">Calibration Factor Correction</a>
+            </li>
+            <li className="pt-10 pl-5">
+              <button
+                onClick={handleGenerateHDRImage}
+                className="bg-gray-700 hover:bg-gray-400 text-gray-300 font-semibold py-1 px-2 border-gray-400 rounded">
+                Generate HDR Image
+              </button>
+            </li>
 
+          </ul>
+        </nav>
+        <h1 className="font-bold pt-10">Configuration</h1>
+        <h2 className="font-bold pt-5" id="image_selection">Image Selection</h2>
         <button
           onClick={dialog}
-          className="bg-gray-300 hover:bg-gray-400 text-gray-700 font-semibold py-1 px-2 border-gray-400 rounded"
-        >
+          className="bg-gray-300 hover:bg-gray-400 text-gray-700 font-semibold py-1 px-2 border-gray-400 rounded">
           Select Files
         </button>
         <div>Image count: {images.length}</div>
@@ -273,12 +302,12 @@ export default function Home() {
             </div>
           ))}
         </div>
-        <h2>Response Path Upload</h2>
+        <h2 className="font-bold pt-5" id="response">Response File</h2>
         <button
           onClick={dialogResponse}
           className="bg-gray-300 hover:bg-gray-400 text-gray-700 font-semibold py-1 px-2 border-gray-400 rounded"
         >
-          Select Response Files
+          Select File
         </button>
         <div>
           {responsePaths && (
@@ -288,12 +317,14 @@ export default function Home() {
                </div>
           )}
         </div>
-        <h2>Fish Eye Correction Path Upload</h2>
+        <div id="c_r_v">
+          <CroppingResizingViewSettings handleChange={handleViewSettingsChange} />
+        </div>
+        <h2 className="font-bold pt-5" id="fe">Fish Eye Correction</h2>
         <button
           onClick={dialogFE}
-          className="bg-gray-300 hover:bg-gray-400 text-gray-700 font-semibold py-1 px-2 border-gray-400 rounded"
-        >
-          Select Fish Eye Correction Files
+          className="bg-gray-300 hover:bg-gray-400 text-gray-700 font-semibold py-1 px-2 border-gray-400 rounded">
+          Select File
         </button>
         <div>
           {fe_correctionPaths && (
@@ -303,12 +334,12 @@ export default function Home() {
                </div>
           )}
         </div>
-        <h2>Vignetting Correction Path Upload</h2>
+        <h2 className="font-bold pt-5" id="v">Vignetting Correction</h2>
         <button
           onClick={dialogV}
           className="bg-gray-300 hover:bg-gray-400 text-gray-700 font-semibold py-1 px-2 border-gray-400 rounded"
         >
-          Select Vignetting Correction Files
+          Select File
         </button>
         <div>
           {v_correctionPaths && (
@@ -318,12 +349,12 @@ export default function Home() {
                </div>
           )}
         </div>
-        <h2>Neutral Density Correction Path Upload</h2>
+        <h2 className="font-bold pt-5" id="nd">Neutral Density Correction</h2>
         <button
           onClick={dialogND}
           className="bg-gray-300 hover:bg-gray-400 text-gray-700 font-semibold py-1 px-2 border-gray-400 rounded"
         >
-          Select Neutral Density Correction Files
+          Select File
         </button>
         <div>
           {nd_correctionPaths && (
@@ -333,12 +364,12 @@ export default function Home() {
                </div>
           )}
         </div>
-        <h2>Calibration Factor Correction Path Upload</h2>
+        <h2 className="font-bold pt-5" id="cf">Calibration Factor Correction</h2>
         <button
           onClick={dialogCF}
           className="bg-gray-300 hover:bg-gray-400 text-gray-700 font-semibold py-1 px-2 border-gray-400 rounded"
         >
-          Select Calibration Factor Correction Files
+          Select File
         </button>
         <div>
           {cf_correctionPaths && (
@@ -348,13 +379,6 @@ export default function Home() {
                </div>
           )}
         </div>
-        <CroppingResizingViewSettings handleChange={handleViewSettingsChange} />
-        <button
-          onClick={handleGenerateHDRImage}
-          className="bg-gray-300 hover:bg-gray-400 text-gray-700 font-semibold py-1 px-2 border-gray-400 rounded"
-        >
-          Generate HDR Image
-        </button>
       </div>
     </main>
   );
