@@ -1,7 +1,5 @@
 use crate::pipeline::DEBUG;
-use std::fs::File;
-use std::process::Command;
-use std::process::Stdio;
+use crate::pipeline_utils::piped_command;
 
 use super::ConfigSettings;
 
@@ -22,8 +20,7 @@ use super::ConfigSettings;
 //      of the fisheye view (in pixels)
 pub fn crop(
     config_settings: &ConfigSettings,
-    input_file: String,
-    output_file: String,
+    input_data: std::process::Output,
     diameter: String,
     xleft: String,
     ydown: String,
@@ -35,28 +32,23 @@ pub fn crop(
         println!("\tydown: {ydown}");
     }
 
-    // Create a new command for pcompos
-    let mut command = Command::new(config_settings.radiance_path.to_string() + "pcompos");
-
-    // Add arguments to pcompos command
-    command.args([
-        "-x",
-        diameter.as_str(),
-        "-y",
-        diameter.as_str(),
-        input_file.as_str(),
-        format!("-{xleft}").as_str(),
-        format!("-{ydown}").as_str(),
-    ]);
-
-    // Run the command, and get the output
-    let output = command.output().expect("Crop failed!");
+    // Run the command
+    let output = piped_command(
+        config_settings.radiance_path.to_string() + "pcompos",
+        vec![
+            "-x",
+            diameter.as_str(),
+            "-y",
+            diameter.as_str(),
+            format!("-{xleft}").as_str(),
+            format!("-{ydown}").as_str(),
+        ],
+        input_data
+    );
 
     if DEBUG {
-        println!("\nCrop command exit status: {:?}\n", output.status);
+        println!("\nCrop command exit status: {:?}\n", output.as_ref().unwrap().status.code());
     }
 
-    assert!(output.status.success());
-
-    return Ok(output);
+    return output;
 }

@@ -1,7 +1,7 @@
 use crate::pipeline::DEBUG;
-use std::process::Command;
-use std::process::Stdio;
+use std::process::{Command, Stdio};
 use std::fs::File;
+use std::io::Write;
 // use regex::Regex;
 
 use super::ConfigSettings;
@@ -22,13 +22,14 @@ use super::ConfigSettings;
 pub fn header_editing(
     config_settings: &ConfigSettings,
     input_data: std::process::Output,
-    output_data: std::process::Output,
     vertical_angle: String,
     horizontal_angle: String,
-) -> Result<String, String> {
+) -> Result<std::process::Output, String> {
     if DEBUG {
         println!("header_editing() was called with parameters:\n\tvertical_angle: {vertical_angle}\n\thorizontal_angle: {horizontal_angle}");
     }
+
+    return Err("Hai!".to_string());
 
     /*
     TODO: Looking into using regex instead of sed, so this can run on Windows without a problem.
@@ -53,40 +54,39 @@ pub fn header_editing(
     */
 
     // Apply the new header
-    let mut command = Command::new(config_settings.radiance_path.to_string() + "getinfo");
+    // let mut command = Command::new(config_settings.radiance_path.to_string() + "getinfo");
 
-    // Add arguments
-    command.args([
-        "-a",
-        format!("VIEW= -vta -vv {} -vh {}", vertical_angle, horizontal_angle).as_str(),
-    ]);
+    // // Add arguments
+    // command.args([
+    //     "-a",
+    //     format!("VIEW= -vta -vv {} -vh {}", vertical_angle, horizontal_angle).as_str(),
+    // ]);
 
-    // Set up piping of the input file
-    command.stdout(output_data);
-    command.stdin(input_data);
+    // // Set up stdin
+    // command.stdin(Stdio::piped());
 
-    // Run the command, and get the output.
-    let output = command.output().expect("Header Editing failed");
+    // let processing = command.spawn().expect("Could not spawn process!");
 
-    // Run the command
-    let status = command.status();
+    // // Set up piping of the input file
+    // let mut stdin = processing.stdin.take().expect("Failed to init stdin.");
+    // std::thread::spawn(move || {
+    //     stdin.write_all(input_data.stdout.as_slice());
+    // });
 
-    if DEBUG {
-        println!(
-            "\nHeader editing command exit status: {:?}\n",
-            status
-        );
-    }
+    // // Run the command, and get the output.
+    // let output = command.output().expect("Header Editing failed");
 
-    // Return a Result object to indicate whether command was successful
-    if status.is_ok() {
-        // On success, return output path of HDR image
-        Ok(output_file.into())
-    } else {
-        // On error, return an error message
-        Err(
-            "Error, non-zero exit status. Header editing command (getinfo) failed."
-                .into(),
-        )
-    }
+    // // Run the command
+    // let status = command.status();
+
+    // if DEBUG {
+    //     println!(
+    //         "\nHeader editing command exit status: {:?}\n",
+    //         status
+    //     );
+    // }
+
+    // assert!(output.status.success());
+
+    // return Ok(output);
 }

@@ -3,13 +3,14 @@
 
 // Import pipeline module
 mod pipeline;
+mod pipeline_utils;
 use pipeline::pipeline;
 
 use std::env;
 
 // Hardcoded radiance and hdrgen paths for backend testing
-const _FAKE_RADIANCE_PATH: &str = "/usr/local/radiance/bin";
-const _FAKE_HDRGEN_PATH: &str = "/usr/local/bin";
+const _FAKE_RADIANCE_PATH: &str = "/home/builderpro/Desktop/radiance/bin/";
+const _FAKE_HDRGEN_PATH: &str = "/home/builderpro/Desktop/hdrgen_linux/bin/";
 
 fn main() {
     // === Define hardcoded data for testing ===

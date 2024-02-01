@@ -114,22 +114,20 @@ pub async fn pipeline(
     // };
 
     // Nullify the exposure value
-    let nullify_exposure_result = nullify_exposure_value(
+    let nullify_exposure_data = nullify_exposure_value(
         &config_settings,
-        format!("{}output1.hdr", config_settings.temp_path),
-        format!("{}output2.hdr", config_settings.temp_path),
+        format!("{}output1.hdr", config_settings.temp_path)
     );
 
     // If the command to nullify the exposure value encountered an error, abort pipeline
-    if nullify_exposure_result.is_err() {
-        return nullify_exposure_result;
+    if nullify_exposure_data.is_err() {
+        return Err("Error with nullify exposure data!".into());
     }
 
     // Crop the HDR image to a square fitting the fisheye view
     let crop_result = crop(
         &config_settings,
-        format!("{}output2.hdr", config_settings.temp_path),
-        format!("{}output3.hdr", config_settings.temp_path),
+        nullify_exposure_data.unwrap(),
         diameter,
         xleft,
         ydown,
@@ -137,7 +135,7 @@ pub async fn pipeline(
 
     // If the cropping command encountered an error, abort pipeline
     if crop_result.is_err() {
-        return crop_result;
+        return Err("Error with croping image!".into());
     }
 
     // Resize the HDR image
@@ -155,63 +153,63 @@ pub async fn pipeline(
     }
 
     // Apply the projection adjustment to the HDR image
-    let projection_adjustment_result = projection_adjustment(
-        &config_settings,
-        // format!("{}output4.hdr", config_settings.temp_path),
-        format!("{}output4.hdr", config_settings.temp_path),
-        format!("{}output5.hdr", config_settings.temp_path),
-        fisheye_correction_cal,
-    );
+    // let projection_adjustment_result = projection_adjustment(
+    //     &config_settings,
+    //     // format!("{}output4.hdr", config_settings.temp_path),
+    //     format!("{}output4.hdr", config_settings.temp_path),
+    //     format!("{}output5.hdr", config_settings.temp_path),
+    //     fisheye_correction_cal,
+    // );
 
-    // If the command to apply projection adjustment encountered an error, abort pipeline
-    if projection_adjustment_result.is_err() {
-        return projection_adjustment_result;
-    }
+    // // If the command to apply projection adjustment encountered an error, abort pipeline
+    // if projection_adjustment_result.is_err() {
+    //     return projection_adjustment_result;
+    // }
 
-    // Correct for the vignetting effect
-    let vignetting_effect_correction_result = vignetting_effect_correction(
-        &config_settings,
-        format!("{}output5.hdr", config_settings.temp_path),
-        format!("{}output6.hdr", config_settings.temp_path),
-        vignetting_correction_cal,
-    );
+    // // Correct for the vignetting effect
+    // let vignetting_effect_correction_result = vignetting_effect_correction(
+    //     &config_settings,
+    //     format!("{}output5.hdr", config_settings.temp_path),
+    //     format!("{}output6.hdr", config_settings.temp_path),
+    //     vignetting_correction_cal,
+    // );
 
-    if vignetting_effect_correction_result.is_err() {
-        return vignetting_effect_correction_result;
-    }
+    // if vignetting_effect_correction_result.is_err() {
+    //     return vignetting_effect_correction_result;
+    // }
 
-    // Apply the neutral density filter.
-    let neutral_density_result = neutral_density(
-        &config_settings,
-        format!("{}output6.hdr", config_settings.temp_path),
-        format!("{}output7.hdr", config_settings.temp_path),
-        neutral_density_cal,
-    );
+    // // Apply the neutral density filter.
+    // let neutral_density_result = neutral_density(
+    //     &config_settings,
+    //     format!("{}output6.hdr", config_settings.temp_path),
+    //     format!("{}output7.hdr", config_settings.temp_path),
+    //     neutral_density_cal,
+    // );
 
-    if neutral_density_result.is_err() {
-        return neutral_density_result
-    }
+    // if neutral_density_result.is_err() {
+    //     return neutral_density_result
+    // }
 
-    // Correct for photometric adjustments
-    let photometric_adjustment_result = photometric_adjustment(
-        &config_settings,
-        format!("{}output7.hdr", config_settings.temp_path),
-        format!("{}output8.hdr", config_settings.temp_path),
-        photometric_adjustment_cal,
-    );
+    // // Correct for photometric adjustments
+    // let photometric_adjustment_result = photometric_adjustment(
+    //     &config_settings,
+    //     format!("{}output7.hdr", config_settings.temp_path),
+    //     format!("{}output8.hdr", config_settings.temp_path),
+    //     photometric_adjustment_cal,
+    // );
 
-    if photometric_adjustment_result.is_err() {
-        return photometric_adjustment_result
-    }
+    // if photometric_adjustment_result.is_err() {
+    //     return photometric_adjustment_result
+    // }
 
-    // Edit the header
-    let header_editing_result = header_editing(
-        &config_settings,
-        format!("{}output8.hdr", config_settings.temp_path),
-        format!("{}output9.hdr", config_settings.temp_path),
-        vertical_angle,
-        horizontal_angle,
-    );
-    
-    return header_editing_result;
+    // // Edit the header
+    // let header_editing_result = header_editing(
+    //     &config_settings,
+    //     format!("{}output8.hdr", config_settings.temp_path),
+    //     format!("{}output9.hdr", config_settings.temp_path),
+    //     vertical_angle,
+    //     horizontal_angle,
+    // );
+    let header_editing_result: String = "Yay!".to_string();
+    return Ok(header_editing_result);
 }

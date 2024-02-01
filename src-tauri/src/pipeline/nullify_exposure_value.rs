@@ -14,8 +14,7 @@ use super::ConfigSettings;
 pub fn nullify_exposure_value(
     config_settings: &ConfigSettings,
     input_file: String,
-    output_file: String,
-) -> Result<String, String> {
+) -> Result<std::process::Output, String> {
     if DEBUG {
         println!("nullify_exposure_value was called!");
     }
@@ -24,24 +23,21 @@ pub fn nullify_exposure_value(
     let mut command = Command::new(config_settings.radiance_path.to_string() + "ra_xyze");
 
     // Add arguments to ra_xyze command
-    command.args(["-r", "-o", input_file.as_str(), output_file.as_str()]);
+    command.args(["-r", "-o", input_file.as_str()]);
 
     // Run the command
-    let status = command.status();
+    let output = command.output().expect("Could not successfully nulify exposure values!");
 
     if DEBUG {
         println!(
             "\nNullication of exposure value command exit status: {:?}\n",
-            status
+            output.status.code()
         );
     }
 
-    // Return a Result object to indicate whether ra_xyze command was successful
-    if status.is_ok() {
-        // On success, return output path of HDR image
-        Ok(output_file.into())
-    } else {
-        // On error, return an error message
-        Err("Error, non-zero exit status. ra_xyze command failed.".into())
+    if !output.status.success(){
+        return Err("Issue with Nullification exposure".into());
     }
+
+    return Ok(output);
 }

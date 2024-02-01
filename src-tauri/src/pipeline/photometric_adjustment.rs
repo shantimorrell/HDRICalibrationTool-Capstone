@@ -1,7 +1,7 @@
 use crate::pipeline::DEBUG;
+use crate::pipeline_utils::piped_command;
 use std::process::Command;
 use std::process::Stdio;
-use std::fs::File;
 use std::io::Write;
 
 use super::ConfigSettings;
@@ -26,38 +26,23 @@ pub fn photometric_adjustment(
         println!("photometric_adjustment() was called with parameters:\n\t photometric_adjustment: {photometric_adjustment}");
     }
 
-    // Command to run
-    let mut command = Command::new(config_settings.radiance_path.to_string() + "pcomb");
-
-    // Add arguments
-    command.args([
+    // Run the command
+    let output = piped_command(
+        config_settings.radiance_path.to_string() + "pcomb",
+        vec![
         "-h",
         "-f",
         photometric_adjustment.as_str(),
-    ]);
-
-    // Set the stdin as the input data
-    command.stdin(Stdio::piped());
-
-    // Run the command, waiting for stdin.
-    let running = command.spawn().expect("Photometric adjustment failed");
-
-    // Give stdin data.
-    let mut stdin = running.stdin.take().expect("Couldn't get stdin");
-    std::thread::spawn(move || {
-        stdin.write_all(&*input_data.stdout).expect("Issue getting previous stdout");
-    });
-
-    let output = running.wait_with_output().expect("Process didn't run properly");
+        ],
+        input_data
+    );
 
     if DEBUG {
         println!(
             "\nPhotometric adjustment command exit status: {:?}\n",
-            output.status
+            output.as_ref().unwrap().status.code()
         );
     }
-    
-    assert!(output.status.success());
 
-    return Ok(output);
+    return output;
 }
