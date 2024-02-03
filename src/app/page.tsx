@@ -50,6 +50,16 @@ export default function Home() {
   let cf_correction: any = "";
   const [cf_correctionPaths, set_cf_correctionPaths] = useState<string>("");
 
+  function Paths(path: string) {
+    for (let i = 0; i < path.length; i++) {
+      if (path[i] == "/" || path[i] == "\\") {
+        path = path.slice(i + 1)
+        i = -1
+      }
+    }
+    return path
+  }
+
   // Open a file dialog window using the tauri api and update the images array with the results
   async function dialog() {
     selected = await open({
@@ -312,8 +322,7 @@ export default function Home() {
         <div>
           {responsePaths && (
               <div>
-                {responsePaths}
-                <button onClick={() => handleResponseDelete()}>Delete Response File</button>
+                {Paths(responsePaths)} <button onClick={() => handleResponseDelete()}>Delete</button>
                </div>
           )}
         </div>
@@ -329,8 +338,7 @@ export default function Home() {
         <div>
           {fe_correctionPaths && (
               <div>
-                {fe_correctionPaths}
-                <button onClick={() => handle_fe_delete()}>Delete Fish Eye Correction File</button>
+                {Paths(fe_correctionPaths)} <button onClick={() => handle_fe_delete()}>Delete</button>
                </div>
           )}
         </div>
@@ -344,8 +352,7 @@ export default function Home() {
         <div>
           {v_correctionPaths && (
               <div>
-                {v_correctionPaths}
-                <button onClick={() => handle_v_delete()}>Delete Vignetting Correction File</button>
+                {Paths(v_correctionPaths)} <button onClick={() => handle_v_delete()}>Delete</button>
                </div>
           )}
         </div>
@@ -359,8 +366,7 @@ export default function Home() {
         <div>
           {nd_correctionPaths && (
               <div>
-                {nd_correctionPaths}
-                <button onClick={() => handle_nd_delete()}>Delete Neutral Density Correction File</button>
+                {Paths(nd_correctionPaths)} <button onClick={() => handle_nd_delete()}>Delete</button>
                </div>
           )}
         </div>
@@ -374,10 +380,10 @@ export default function Home() {
         <div>
           {cf_correctionPaths && (
               <div>
-                {cf_correctionPaths}
-                <button onClick={() => handle_cf_delete()}>Delete Calibration Factor Correction File</button>
+                {Paths(cf_correctionPaths)} <button onClick={() => handle_cf_delete()}>Delete</button>
                </div>
           )}
+          <div className="pt-5"></div>
         </div>
       </div>
     </main>
