@@ -1,7 +1,7 @@
 use crate::pipeline::DEBUG;
-use std::{
-    fs::File,
-    process::{Command, Stdio},
+use crate::pipeline_utils::{
+    piped_command,
+    return_output
 };
 
 use super::ConfigSettings;
@@ -18,42 +18,23 @@ use super::ConfigSettings;
 //      a string for the fisheye correction calibration file
 pub fn projection_adjustment(
     config_settings: &ConfigSettings,
-    input_file: String,
-    output_file: String,
+    input_data: &std::process::Output,
     fisheye_correction_cal: String,
-) -> Result<String, String> {
+) -> Result<std::process::Output, String> {
     if DEBUG {
         println!("projection_adjustment() was called with parameters:");
         println!("\tfisheye_correction_cal: {fisheye_correction_cal}");
     }
 
-    // Create a new command for pcomb
-    let mut command = Command::new(config_settings.radiance_path.join("pcomb"));
+    // Run pcomb
+    let output : Result<std::process::Output, String> = piped_command(
+        config_settings.radiance_path.join("pcomb"),
+        vec![
+            "-f",
+            fisheye_correction_cal.as_str(),
+        ],
+        input_data
+    );
 
-    // Add arguments to pcomb command
-    command.args(["-f", fisheye_correction_cal.as_str(), input_file.as_str()]);
-
-    // Direct command's output to specifed output file
-    let file = File::create(&output_file).unwrap();
-    let stdio = Stdio::from(file);
-    command.stdout(stdio);
-
-    // Run the command
-    let status = command.status();
-
-    if DEBUG {
-        println!(
-            "\nProjection adjustment command exit status: {:?}\n",
-            status
-        );
-    }
-
-    // Return a Result object to indicate whether command was successful
-    if status.is_ok() {
-        // On success, return output path of HDR image
-        Ok(output_file.into())
-    } else {
-        // On error, return an error message
-        Err("Error, non-zero exit status. Projection adjustment command (pcomb) failed.".into())
-    }
+    return_output(&output, "Projection Adjustments")
 }

@@ -1,5 +1,6 @@
 use crate::pipeline::DEBUG;
-use std::process::Command;
+use crate::pipeline_utils::start_piped_command;
+use crate::pipeline_utils::return_output;
 
 use super::ConfigSettings;
 
@@ -14,34 +15,20 @@ use super::ConfigSettings;
 pub fn nullify_exposure_value(
     config_settings: &ConfigSettings,
     input_file: String,
-    output_file: String,
-) -> Result<String, String> {
+) -> Result<std::process::Output, String> {
     if DEBUG {
         println!("nullify_exposure_value was called!");
     }
 
-    // Create a new command for ra_xyze
-    let mut command = Command::new(config_settings.radiance_path.join("ra_xyze"));
+    // Create a new command for ra_xyze and run it
+    let output : Result<std::process::Output, String> = start_piped_command(
+        config_settings.radiance_path.join("ra_xyze"),
+        vec![
+            "-r",
+            "-o",
+            input_file.as_str()
+        ]
+    );
 
-    // Add arguments to ra_xyze command
-    command.args(["-r", "-o", input_file.as_str(), output_file.as_str()]);
-
-    // Run the command
-    let status = command.status();
-
-    if DEBUG {
-        println!(
-            "\nNullication of exposure value command exit status: {:?}\n",
-            status
-        );
-    }
-
-    // Return a Result object to indicate whether ra_xyze command was successful
-    if status.is_ok() {
-        // On success, return output path of HDR image
-        Ok(output_file.into())
-    } else {
-        // On error, return an error message
-        Err("Error, non-zero exit status. ra_xyze command failed.".into())
-    }
+    return return_output(&output, "Nullify Exposure");
 }

@@ -23,11 +23,15 @@ use neutral_density::neutral_density;
 use nullify_exposure_value::nullify_exposure_value;
 use photometric_adjustment::photometric_adjustment;
 use projection_adjustment::projection_adjustment;
+use rand::distributions::{Alphanumeric, DistString};
+use rand::{rngs::ThreadRng, thread_rng};
 use resize::resize;
 use vignetting_effect_correction::vignetting_effect_correction;
 
 // Used to print out debug information
 pub const DEBUG: bool = true;
+// Initalize the seed for rand
+static mut RNG : ThreadRng = thread_rng();
 
 // Struct to hold some configuration settings (e.g. path settings).
 // Used when various stages of the pipeline are called.
@@ -270,6 +274,8 @@ pub fn process_image_set(
     vertical_angle: String,
     horizontal_angle: String,
 ) -> Result<String, String> {
+    let hdrgen_name : String = format!("{}.hdr", Alphanumeric.sample_string(&mut RNG, 24));
+    let output_name : String = format!("{}.hdr", input_images[0]);
     // TODO: Examine a safer way to convert paths to strings that works for non utf-8?
     let merge_exposures_result = merge_exposures(
         &config_settings,
@@ -277,14 +283,14 @@ pub fn process_image_set(
         response_function,
         config_settings
             .temp_path
-            .join("output1.hdr")
+            .join(hdrgen_name.as_str())
             .display()
             .to_string(),
     );
 
     // If the command to merge exposures encountered an error, abort pipeline
     if merge_exposures_result.is_err() {
-        return merge_exposures_result;
+        return Err(merge_exposures_result.unwrap_err());
     };
 
     // Nullify the exposure value
@@ -292,34 +298,20 @@ pub fn process_image_set(
         &config_settings,
         config_settings
             .temp_path
-            .join("output1.hdr")
-            .display()
-            .to_string(),
-        config_settings
-            .temp_path
-            .join("output2.hdr")
+            .join(hdrgen_name.as_str())
             .display()
             .to_string(),
     );
 
     // If the command to nullify the exposure value encountered an error, abort pipeline
     if nullify_exposure_result.is_err() {
-        return nullify_exposure_result;
+        return Err(nullify_exposure_result.unwrap_err());
     }
 
     // Crop the HDR image to a square fitting the fisheye view
     let crop_result = crop(
         &config_settings,
-        config_settings
-            .temp_path
-            .join("output2.hdr")
-            .display()
-            .to_string(),
-        config_settings
-            .temp_path
-            .join("output3.hdr")
-            .display()
-            .to_string(),
+        &nullify_exposure_result.unwrap(),
         diameter,
         xleft,
         ydown,
@@ -327,132 +319,81 @@ pub fn process_image_set(
 
     // If the cropping command encountered an error, abort pipeline
     if crop_result.is_err() {
-        return crop_result;
+        return Err(crop_result.unwrap_err());
     }
 
     // Resize the HDR image
     let resize_result = resize(
         &config_settings,
-        config_settings
-            .temp_path
-            .join("output3.hdr")
-            .display()
-            .to_string(),
-        config_settings
-            .temp_path
-            .join("output4.hdr")
-            .display()
-            .to_string(),
+        &crop_result.unwrap(),
         xdim,
         ydim,
     );
 
     // If the resizing command encountered an error, abort pipeline
     if resize_result.is_err() {
-        return resize_result;
+        return Err(resize_result.unwrap_err());
     }
 
     // Apply the projection adjustment to the HDR image
     let projection_adjustment_result = projection_adjustment(
         &config_settings,
-        config_settings
-            .temp_path
-            .join("output4.hdr")
-            .display()
-            .to_string(),
-        config_settings
-            .temp_path
-            .join("output5.hdr")
-            .display()
-            .to_string(),
+        &resize_result.unwrap(),
         fisheye_correction_cal,
     );
 
     // If the command to apply projection adjustment encountered an error, abort pipeline
     if projection_adjustment_result.is_err() {
-        return projection_adjustment_result;
+        return Err(projection_adjustment_result.unwrap_err());
     }
 
     // Correct for the vignetting effect
     let vignetting_effect_correction_result = vignetting_effect_correction(
         &config_settings,
-        config_settings
-            .temp_path
-            .join("output5.hdr")
-            .display()
-            .to_string(),
-        config_settings
-            .temp_path
-            .join("output6.hdr")
-            .display()
-            .to_string(),
+        &projection_adjustment_result.unwrap(),
         vignetting_correction_cal,
     );
 
     if vignetting_effect_correction_result.is_err() {
-        return vignetting_effect_correction_result;
+        return Err(vignetting_effect_correction_result.unwrap_err());
     }
 
     // Apply the neutral density filter.
-    let neutral_density_result: Result<String, String> = neutral_density(
+    let neutral_density_result = neutral_density(
         &config_settings,
-        config_settings
-            .temp_path
-            .join("output6.hdr")
-            .display()
-            .to_string(),
-        config_settings
-            .temp_path
-            .join("output7.hdr")
-            .display()
-            .to_string(),
+        &vignetting_effect_correction_result.unwrap(),
         neutral_density_cal,
     );
 
     if neutral_density_result.is_err() {
-        return neutral_density_result;
+        return Err(neutral_density_result.unwrap_err());
     }
 
     // Correct for photometric adjustments
     let photometric_adjustment_result = photometric_adjustment(
         &config_settings,
-        config_settings
-            .temp_path
-            .join("output7.hdr")
-            .display()
-            .to_string(),
-        config_settings
-            .temp_path
-            .join("output8.hdr")
-            .display()
-            .to_string(),
+        &neutral_density_result.unwrap(),
         photometric_adjustment_cal,
     );
 
     if photometric_adjustment_result.is_err() {
-        return photometric_adjustment_result;
+        return Err(photometric_adjustment_result.unwrap_err());
     }
 
     // Edit the header
     let header_editing_result = header_editing(
         &config_settings,
-        config_settings
-            .temp_path
-            .join("output8.hdr")
-            .display()
-            .to_string(),
-        config_settings
-            .temp_path
-            .join("output9.hdr")
-            .display()
-            .to_string(),
+        &photometric_adjustment_result.unwrap(),
         vertical_angle,
         horizontal_angle,
     );
 
     if header_editing_result.is_err() {
-        return header_editing_result;
+        return Err(header_editing_result.unwrap_err());
     }
+
+    //Write the output to the file.
+    let mut output_file = File::open(format!("{}/{}"));
 
     return Result::Ok(("Image set processed.").to_string());
 }

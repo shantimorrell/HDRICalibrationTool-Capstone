@@ -3,6 +3,7 @@
 
 // Import pipeline module
 mod pipeline;
+mod pipeline_utils;
 use pipeline::pipeline;
 
 use std::env;

@@ -1,4 +1,6 @@
 use crate::pipeline::DEBUG;
+use mime;
+use mime_guess;
 use std::{
     path::Path,
     process::{Command, ExitStatus},
@@ -26,18 +28,11 @@ pub fn merge_exposures(
         println!("merge_exposures Tauri command was called!");
     }
 
-    // Check whether images are in raw format
+    // Check whether images are in jpeg format
     let first_image_ext = Path::new(&input_images[0]).extension().unwrap_or_default();
-    let raw_images: bool = if input_images.len() > 0
-        && (first_image_ext == "jpg"
-            || first_image_ext == "JPG"
-            || first_image_ext == "jpeg"
-            || first_image_ext == "JPEG")
-    {
-        false
-    } else {
-        true
-    };
+    let first_image_type: Option<mime::Mime> = mime_guess::from_path(input_images[0].as_str()).first();
+    // Check to make sure it's either a jpg or raw
+    let raw_images: bool = first_image_type != Some(mime::IMAGE_JPEG);
 
     if DEBUG {
         println!(
@@ -46,14 +41,16 @@ pub fn merge_exposures(
         );
     }
 
-    let mut command: Command;
+    let mut command: &mut Command;
     if raw_images {
-        // Create a new command for raw2hdr
-        command = Command::new(config_settings.raw2hdr_path.join("raw2hdr"));
-
-        // Add output path for HDR image
-        command.arg("-o");
-        command.arg(format!("{}", output_path));
+        // Run RAW2HDR
+        command = Command::new(
+            config_settings.raw2hdr_path.join("raw2hdr")
+        )
+        .args([
+            "-o", // Output Path for HDR image
+            format!("{}", output_path).as_str(),
+        ]);
 
         // Add input raw LDR images as args
         for input_image in input_images {
@@ -61,26 +58,27 @@ pub fn merge_exposures(
         }
     } else {
         // Create a new command for hdrgen
-        command = Command::new(config_settings.hdrgen_path.join("hdrgen"));
+        command = Command::new(
+            config_settings.hdrgen_path.join("hdrgen")
+        )
+        .args([
+            // Add output path for HDR image
+            "-o",
+            format!("{}", output_path).as_str(),
+            // Add camera response function
+            "-r",
+            format!("{}", response_function).as_str(),
+            // Extra flags to disable auto-adjustments
+            "-a",
+            "-e",
+            "-f",
+            "-g"
+        ]);
 
         // Add input LDR images as args
         for input_image in input_images {
             command.arg(format!("{}", input_image));
         }
-
-        // Add output path for HDR image
-        command.arg("-o");
-        command.arg(format!("{}", output_path));
-
-        // // Add camera response function
-        command.arg("-r");
-        command.arg(format!("{}", response_function));
-
-        // Add remaining flags for hdrgen step
-        command.arg("-a");
-        command.arg("-e");
-        command.arg("-f");
-        command.arg("-g");
     }
 
     // Run the command

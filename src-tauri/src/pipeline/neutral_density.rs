@@ -1,7 +1,6 @@
 use crate::pipeline::DEBUG;
-use std::process::Command;
-use std::process::Stdio;
-use std::fs::File;
+use crate::pipeline_utils::piped_command;
+use crate::pipeline_utils::return_output;
 
 use super::ConfigSettings;
 
@@ -18,48 +17,22 @@ use super::ConfigSettings;
 
 pub fn neutral_density(
     config_settings: &ConfigSettings,
-    input_file: String,
-    output_file: String,
+    input_data: &std::process::Output,
     neutral_density: String,
-) -> Result<String, String> {
+) -> Result<std::process::Output, String> {
     if DEBUG {
         println!("neutral_density() was called with parameters:\n\t neutral_density: {neutral_density}");
     }
 
-    // Command to run
-    let mut command = Command::new(config_settings.radiance_path.join("pcomb"));
+    // Run neutral density, with image inputs, and get the STDOUT.
+    let output = piped_command(
+        config_settings.radiance_path.join("pcomb"),
+        vec![
+            "-f",
+            neutral_density.as_str()
+        ],
+        input_data
+    );
 
-    // Add arguments
-    command.args([
-        "-f",
-        neutral_density.as_str(),
-        input_file.as_str(),
-    ]);
-
-    // Set up piping of output to file
-    let file = File::create(&output_file).unwrap();
-    let stdio = Stdio::from(file);
-    command.stdout(stdio);
-
-    // Run the command
-    let status = command.status();
-
-    if DEBUG {
-        println!(
-            "\nNeutral Density Filter command exit status: {:?}\n",
-            status
-        );
-    }
-
-    // Return a Result object to indicate whether command was successful
-    if status.is_ok() {
-        // On success, return output path of HDR image
-        Ok(output_file.into())
-    } else {
-        // On error, return an error message
-        Err(
-            "Error, non-zero exit status. Neutral density filter command (pcomb) failed."
-                .into(),
-        )
-    }
+    return return_output(&output, "Neutral Density");
 }

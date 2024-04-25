@@ -1,7 +1,8 @@
 use crate::pipeline::DEBUG;
-use std::fs::File;
-use std::process::Command;
-use std::process::Stdio;
+use crate::pipeline_utils::{
+    piped_command,
+    return_output
+};
 
 use super::ConfigSettings;
 
@@ -22,12 +23,11 @@ use super::ConfigSettings;
 //      of the fisheye view (in pixels)
 pub fn crop(
     config_settings: &ConfigSettings,
-    input_file: String,
-    output_file: String,
+    input_data: &std::process::Output,
     diameter: String,
     xleft: String,
     ydown: String,
-) -> Result<String, String> {
+) -> Result<std::process::Output, String> {
     if DEBUG {
         println!("crop() was called with parameters:");
         println!("\tdiameter: {diameter}");
@@ -35,38 +35,19 @@ pub fn crop(
         println!("\tydown: {ydown}");
     }
 
-    // Create a new command for pcompos
-    let mut command = Command::new(config_settings.radiance_path.join("pcompos"));
-
-    // Add arguments to pcompos command
-    command.args([
-        "-x",
-        diameter.as_str(),
-        "-y",
-        diameter.as_str(),
-        input_file.as_str(),
-        format!("-{xleft}").as_str(),
-        format!("-{ydown}").as_str(),
-    ]);
-
-    // Direct command's output to specifed output file
-    let file = File::create(&output_file).unwrap();
-    let stdio = Stdio::from(file);
-    command.stdout(stdio);
-
     // Run the command
-    let status = command.status();
+    let output : Result<std::process::Output, String> = piped_command(
+        config_settings.radiance_path.join("pcompos"),
+        vec![
+            "-x",
+            diameter.as_str(),
+            "-y",
+            diameter.as_str(),
+            format!("-{xleft}").as_str(),
+            format!("-{ydown}").as_str(),
+        ],
+        input_data
+    );
 
-    if DEBUG {
-        println!("\nCrop command exit status: {:?}\n", status);
-    }
-
-    // Return a Result object to indicate whether command was successful
-    if status.is_ok() {
-        // On success, return output path of HDR image
-        Ok(output_file.into())
-    } else {
-        // On error, return an error message
-        Err("Error, non-zero exit status. Crop command (pcompos) failed.".into())
-    }
+    return return_output(&output, "Crop");
 }
