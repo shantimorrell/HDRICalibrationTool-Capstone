@@ -10,37 +10,38 @@ const DEBUG = true;
 const fakePipeline = false;
 
 export default function Home() {
-  // Get default binary paths to populate settings fields based on OS
-  useEffect(() => {
-    let osPlatform = "";
+  // CURRENTLY CAUSES ERROR WITH BUILDING APP
+  // // Get default binary paths to populate settings fields based on OS
+  // useEffect(() => {
+  //   let osPlatform = "";
 
-    // Make a call to the backend to get OS platform
-    invoke<string>("query_os_platform", {})
-      .then((platform: any) => {
-        if (DEBUG) {
-          console.log("OS platform successfully queried:", platform);
-        }
+  //   // Make a call to the backend to get OS platform
+  //   invoke<string>("query_os_platform", {})
+  //     .then((platform: any) => {
+  //       if (DEBUG) {
+  //         console.log("OS platform successfully queried:", platform);
+  //       }
 
-        // Default path for macOS and Linux
-        let defaultPath = "/usr/local/bin";
+  //       // Default path for macOS and Linux
+  //       let defaultPath = "/usr/local/bin";
 
-        // If platform is windows, update default path
-        if (osPlatform === "windows") {
-          defaultPath = "C:\\bin";
-        }
+  //       // If platform is windows, update default path
+  //       if (osPlatform === "windows") {
+  //         defaultPath = "C:\\bin";
+  //       }
 
-        // Update settings
-        setSettings({
-          radiancePath: defaultPath,
-          hdrgenPath: defaultPath,
-          raw2hdrPath: defaultPath,
-          outputPath: settings.outputPath,
-        });
-      })
-      .catch(() => {
-        console.error;
-      });
-  }, []);
+  //       // Update settings
+  //       setSettings({
+  //         radiancePath: defaultPath,
+  //         hdrgenPath: defaultPath,
+  //         raw2hdrPath: defaultPath,
+  //         outputPath: settings.outputPath,
+  //       });
+  //     })
+  //     .catch(() => {
+  //       console.error;
+  //     });
+  // }, []);
 
   // Holds the fisheye coordinates and view settings
   const [viewSettings, setViewSettings] = useState({
@@ -409,24 +410,25 @@ export default function Home() {
     <main className="bg-white flex min-h-screen flex-col items-center justify-between text-black">
       <div>
         <Navigation
-        responsePaths = {responsePaths}
-        fe_correctionPaths = {fe_correctionPaths}
-        v_correctionPaths = {v_correctionPaths}
-        nd_correctionPaths = {nd_correctionPaths}
-        cf_correctionPaths = {cf_correctionPaths}
-        viewSettings = {viewSettings}
-        setConfig = {setConfig}
-        settings = {settings}
-        setSettings = {setSettings}
-        handleSettingsChange = {handleSettingsChange}
-        handleGenerateHDRImage = {handleGenerateHDRImage}
-        showProgress = {showProgress}
-        fakePipeline = {fakePipeline}
-        setProgressButton = {setProgressButton}
-        setProcessError = {setProcessError}
-        progressButton = {progressButton}
-        processError = {processError}
-        ResetProgress = {ResetProgress}/>
+          responsePaths={responsePaths}
+          fe_correctionPaths={fe_correctionPaths}
+          v_correctionPaths={v_correctionPaths}
+          nd_correctionPaths={nd_correctionPaths}
+          cf_correctionPaths={cf_correctionPaths}
+          viewSettings={viewSettings}
+          setConfig={setConfig}
+          settings={settings}
+          setSettings={setSettings}
+          handleSettingsChange={handleSettingsChange}
+          handleGenerateHDRImage={handleGenerateHDRImage}
+          showProgress={showProgress}
+          fakePipeline={fakePipeline}
+          setProgressButton={setProgressButton}
+          setProcessError={setProcessError}
+          progressButton={progressButton}
+          processError={processError}
+          ResetProgress={ResetProgress}
+        />
         <div className="w-3/4 ml-auto pl-3">
           <h1 className="font-bold pt-10">Configuration</h1>
           <button
