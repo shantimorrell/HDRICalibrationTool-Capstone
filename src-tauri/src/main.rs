@@ -6,8 +6,8 @@ mod pipeline;
 use pipeline::pipeline;
 
 // Command to query operating system from frontend
-mod query_os_platform;
-use query_os_platform::query_os_platform;
+// mod query_os_platform;
+// use query_os_platform::query_os_platform;
 
 use std::env;
 
@@ -105,7 +105,7 @@ fn main() {
 
 
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![pipeline, query_os_platform])
+        .invoke_handler(tauri::generate_handler![pipeline]) //, query_os_platform])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
