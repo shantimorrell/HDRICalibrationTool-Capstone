@@ -13,9 +13,6 @@
   "tauri": {
     "allowlist": {
       "all": false,
-      "os": {
-        "all": true
-      },
       "dialog": {
         "all": true,
         "ask": true,
